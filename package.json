@@ -1,0 +1,15 @@
+{
+  "name": "myPromise",
+  "version": "1.0.0",
+  "description": "promise demo",
+  "main": "index.js",
+  "repository": "https://github.com/loofk/myPromise.git",
+  "author": "Xiang Liu",
+  "license": "MIT",
+  "scripts": {
+    "test": "promises-aplus-tests promise"
+  },
+  "devDependencies": {
+    "promises-aplus-tests": "^2.1.2"
+  }
+}
