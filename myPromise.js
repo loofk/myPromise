@@ -136,16 +136,32 @@ MyPromise.prototype.catch = function (fn) {
 
 MyPromise.prototype.finally = function (fn) {
   return this.then(val => {
-    fn()
+    fn && fn()
     return val
   }, err => {
-    fn()
+    fn && fn()
     throw err
   })
 }
 
 MyPromise.resolve = function (val) {
+  // promise对象
   if (val instanceof MyPromise) return val
+
+  // thenable对象
+  if (typeof val === 'object' && val !== null || typeof val === 'function') {
+    let then = val.then
+
+    if (typeof then === 'function') {
+      return new Promise((resolve, reject) => {
+        try {
+          then.call(val, resolve, reject)
+        } catch (err) {
+          reject(err)
+        }
+      })
+    }
+  }
 
   return new MyPromise(resolve => {
     resolve(val)
@@ -159,9 +175,50 @@ MyPromise.reject = function (err) {
 }
 
 MyPromise.all = function (promises) {
-  // 传入的不是数组类型，转化为数组
+  // 传入的不是数组类型，报错
   if (!Array.isArray(promises)) {
-    promises = [promises]
+    throw new TypeError('parameters should be Array')
+  }
+
+  return new MyPromise((resolve, reject) => {
+    let res = []
+    let len = promises.length
+    let count = 0
+    let index = 0
+
+    // forEach支持异步，而普通for循环不支持
+    for (let i = 0; i < len; i++) {
+      let promise = promises[i]
+
+      MyPromise.resolve(promise).then(val => {
+        res[i] = val
+        count++
+
+        if (count === len) resolve(res)
+      }).catch(err => reject(err))
+    }
+  })
+}
+
+MyPromise.race = function (promises) {
+  // 传入的不是数组类型，报错
+  if (!Array.isArray(promises)) {
+    throw new TypeError('parameters should be Array')
+  }
+
+  return new MyPromise((resolve, reject) => {
+    promises.forEach((promise, index) => {
+      MyPromise.resolve(promise).then(val => {
+        resolve(val)
+      }).catch(err => reject(err))
+    })
+  })
+}
+
+MyPromise.any = function (promises) {
+  // 传入的不是数组类型，报错
+  if (!Array.isArray(promises)) {
+    throw new TypeError('parameters should be Array')
   }
 
   return new MyPromise((resolve, reject) => {
@@ -169,13 +226,46 @@ MyPromise.all = function (promises) {
     let len = promises.length
     let count = 0
 
+    // forEach支持异步，而普通for循环不支持
     promises.forEach((promise, index) => {
-      promise.then(val => {
-        res[index] = val
+      MyPromise.resolve(promise).then(val => {
+        resolve(val)
+      }).catch(err => {
+        res[index] = err
+        count++
+
+        if (count === len) reject(res)
+      })
+    })
+  })
+}
+
+MyPromise.allSettled = function (promises) {
+  // 传入的不是数组类型，报错
+  if (!Array.isArray(promises)) {
+    throw new TypeError('parameters should be Array')
+  }
+
+  return new MyPromise((resolve, reject) => {
+    let res = []
+    let len = promises.length
+    let count = 0
+
+    // forEach支持异步，而普通for循环不支持
+    promises.forEach((promise, index) => {
+      MyPromise.resolve(promise).then(val => {
+        let obj = { status: 'fulfilled', value: val }
+        res[index] = obj
         count++
 
         if (count === len) resolve(res)
-      }).catch(err => reject(err))
+      }).catch(err => {
+        let obj = { status: 'rejected', reason: err }
+        res[index] = obj
+        count++
+
+        if (count === len) resolve(res)
+      })
     })
   })
 }

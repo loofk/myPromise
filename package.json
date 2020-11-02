@@ -7,9 +7,11 @@
   "author": "Xiang Liu",
   "license": "MIT",
   "scripts": {
-    "test": "promises-aplus-tests promise"
+    "test-aplus": "promises-aplus-tests myPromise",
+    "test-jest": "jest"
   },
   "devDependencies": {
+    "jest": "^26.6.1",
     "promises-aplus-tests": "^2.1.2"
   }
 }
