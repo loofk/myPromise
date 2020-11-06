@@ -72,12 +72,12 @@ MyPromise.prototype.then = function (onSuccess, onFailed) {
   let promise2 = null
   let self = this
 
-  if (this.status === 'pending') {
+  if (self.status === 'pending') {
     promise2 = new MyPromise((resolve, reject) => {
-      this.onFulFilledCb.push(() => {
+      self.onFulFilledCb.push(() => {
         setTimeout(() => {
           try {
-            let res = onSuccess(this.val)
+            let res = onSuccess(self.val)
             resolve(res)
           } catch (err) {
             reject(err)
@@ -85,10 +85,10 @@ MyPromise.prototype.then = function (onSuccess, onFailed) {
         })
       })
 
-      this.onRejectedCb.push(() => {
+      self.onRejectedCb.push(() => {
         setTimeout(() => {
           try {
-            let res = onFailed(this.val)
+            let res = onFailed(self.val)
             resolve(res)
           } catch (err) {
             reject(err)
@@ -96,11 +96,11 @@ MyPromise.prototype.then = function (onSuccess, onFailed) {
         })
       })
     })
-  } else if (this.status === 'fulfilled') {
+  } else if (self.status === 'fulfilled') {
     promise2 = new MyPromise((resolve, reject) => {
       setTimeout(() => {
         try {
-          let res = onSuccess(this.val)
+          let res = onSuccess(self.val)
           resolve(res)
         } catch (err) {
           reject(err)
@@ -111,7 +111,7 @@ MyPromise.prototype.then = function (onSuccess, onFailed) {
     promise2 = new MyPromise((resolve, reject) => {
       setTimeout(() => {
         try {
-          let res = onFailed(this.val)
+          let res = onFailed(self.val)
           resolve(res)
         } catch (err) {
           reject(err)
@@ -170,7 +170,7 @@ MyPromise.prototype.then = function (onSuccess, onFailed) {
 function resolvePromise (promise2, x, resolve, reject) {
   // 传入的回调结果不能和promise2相同
   if (promise2 === x) {
-    throw new Error('same promise')
+    throw new TypeError('same promise')
   }
 
   // 如果x是Promise对象，则递归自身
@@ -218,3 +218,9 @@ function resolvePromise (promise2, x, resolve, reject) {
 let res = onSuccess(this.val)
 resolvePromise(res)
 ```
+
+## 总结
+
+`Promise`的出现并没有改变`JS`的执行内核，其本质上仍然是异步的，只是写法的改变使得我们不必在异步回调中就传入处理，而是可以在任何时候处理异步的结果，所需要的仅仅是调用`Promise`对象的`then`方法或者`catch`方法
+
+随着`JS`标准的演进，新的语法往往更加便利，但是我们在使用新语法时也需要了解其底层是如果实现的，后面的`generator`函数和`async`函数实际上都是在`Promise`的基础上进一步发展而来
