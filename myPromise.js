@@ -150,17 +150,21 @@ MyPromise.resolve = function (val) {
 
   // thenable对象
   if (typeof val === 'object' && val !== null || typeof val === 'function') {
-    let then = val.then
+    return new MyPromise((resolve, reject) => {
+      try {
+        let then = val.then
 
-    if (typeof then === 'function') {
-      return new Promise((resolve, reject) => {
-        try {
-          then.call(val, resolve, reject)
-        } catch (err) {
-          reject(err)
+        if (typeof then === 'function') {
+          try {
+            then.call(val, resolve, reject)
+          } catch (err) {
+            reject(err)
+          }
         }
-      })
-    }
+      } catch (err) {
+        reject(err)
+      }
+    })
   }
 
   return new MyPromise(resolve => {
